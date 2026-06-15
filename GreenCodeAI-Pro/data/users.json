@@ -1,0 +1,37 @@
+{
+  "users": [
+    {
+      "user_id": "e49d3595-4053-42ec-81d8-6e9a37c132a6",
+      "name": "Administrator",
+      "username": "admin",
+      "email": "admin@greencode.ai",
+      "password_hash": "960bfe420ff9ff14468959c6c94f13a0$03eed91eeb63bc0e1274e2576d1e95e345c99774cf91fcafb50f1c0e5822f1bd",
+      "role": "admin",
+      "registration_date": "2026-06-15 21:25:11",
+      "last_login": "2026-06-15 21:25:11",
+      "analyses_count": 0
+    },
+    {
+      "user_id": "fa9973ad-6d4a-4c42-8f35-46556706f4a0",
+      "name": "Test User",
+      "username": "testuser",
+      "email": "test@example.com",
+      "password_hash": "ef06266a44d827af5ce270e87fac527d$a6250fcfef29b6578eef9de0f281c980285efee9a978fe1e41fafbc0c6d78f71",
+      "role": "user",
+      "registration_date": "2026-06-15 21:25:42",
+      "last_login": null,
+      "analyses_count": 0
+    },
+    {
+      "user_id": "5158f510-9681-4d48-900b-2cddde4826bf",
+      "name": "Muskan",
+      "username": "muskan",
+      "email": "shaikshaik55440@gmail.com",
+      "password_hash": "f2f1e0553e0b8facbba292b551d42470$f1cff5c15753bcd02fb957d530e2c2b2ee3db45191f4a211f63d01223af9ea4b",
+      "role": "user",
+      "registration_date": "2026-06-15 21:27:29",
+      "last_login": null,
+      "analyses_count": 1
+    }
+  ]
+}

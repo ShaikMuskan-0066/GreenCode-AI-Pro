@@ -1,0 +1,25 @@
+================================================
+GreenCode AI - Sustainable ML Code Optimizer
+================================================
+
+Issues Found:
+  - Large batch size
+  - DataLoader num_workers is 0
+  - Mixed precision likely missing
+  - Full fine-tuning detected
+
+Estimated Energy Usage: 1.18 kWh
+Estimated CO₂ Emission: 0.842 kg
+Estimated Electricity Cost: ₹10.03
+
+Estimation method: codecarbon_energy_mix
+Notes: CO₂ from CodeCarbon India grid mix + heuristic kWh.
+
+Optimization Suggestions:
+  - Use LoRA (PEFT) or adapters instead of full fine-tuning
+  - Enable mixed precision (torch.cuda.amp / autocast)
+  - Reduce batch size or use gradient accumulation to save memory and smooth power draw
+  - Increase DataLoader num_workers and consider pin_memory=True on CUDA
+  - Use quantization (INT8/4-bit) for inference-heavy or large models where quality allows
+
+================================================

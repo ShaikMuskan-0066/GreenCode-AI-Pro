@@ -1,0 +1,21 @@
+====================================================
+GreenCode AI Pro — Sustainability Report
+====================================================
+
+Source: sample_java.java
+
+Detected Issues:
+  - Mixed precision likely missing
+
+Estimated Energy: 0.55 kWh
+Estimated CO₂: 0.392 kg
+Estimated Cost (INR): 4.68
+
+Method: codecarbon_energy_mix
+Notes: CO₂ from CodeCarbon India grid mix + heuristic kWh.
+
+Optimization Suggestions:
+  - Enable mixed precision (torch.cuda.amp / autocast)
+  - Use quantization (INT8 / 4-bit) when quality requirements allow
+
+====================================================
