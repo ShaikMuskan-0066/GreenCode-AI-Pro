@@ -24,8 +24,10 @@ def render_login_form() -> None:
         return
 
     with st.form("login_form", clear_on_submit=False):
+        st.markdown("#### Sign in to continue")
         username = st.text_input("Username", placeholder="your_username")
         password = st.text_input("Password", type="password", placeholder="••••••••")
+        st.checkbox("Remember me", key="remember_me")
         submitted = st.form_submit_button("Login", type="primary", use_container_width=True)
 
     if submitted:

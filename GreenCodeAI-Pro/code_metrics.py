@@ -52,7 +52,7 @@ def _count_line_types(lines: list[str], language: str) -> tuple[int, int, int, i
                 continue
             code += 1
             continue
-        if language in {"Java", "JavaScript", "TypeScript", "C++"}:
+        if language in {"Java", "JavaScript", "TypeScript", "C++", "C", "C#", "Go", "PHP"}:
             if in_block:
                 comment += 1
                 if "*/" in line:
@@ -115,6 +115,22 @@ def _generic_structure_counts(source: str, language: str) -> tuple[int, int, int
         funcs = len(re.findall(r"\b[\w:<>\*&]+\s+\w+\s*\([^)]*\)\s*(?:const)?\s*\{", source))
         classes = len(re.findall(r"\b(?:class|struct)\s+\w+", source))
         imports = len(re.findall(r"^\s*#include\s+", source, flags=re.MULTILINE))
+    elif language == "C":
+        funcs = len(re.findall(r"\b[\w\s\*]+\s+\w+\s*\([^)]*\)\s*\{", source))
+        classes = len(re.findall(r"\b(?:struct|enum)\s+\w+", source))
+        imports = len(re.findall(r"^\s*#include\s+", source, flags=re.MULTILINE))
+    elif language == "C#":
+        funcs = len(re.findall(r"\b(?:public|private|protected|internal)?\s*(?:static\s+)?[\w<>\[\]]+\s+\w+\s*\([^)]*\)", source))
+        classes = len(re.findall(r"\b(?:class|struct|interface)\s+\w+", source))
+        imports = len(re.findall(r"^\s*using\s+", source, flags=re.MULTILINE))
+    elif language == "Go":
+        funcs = len(re.findall(r"\bfunc\s+(?:\([^)]+\)\s+)?\w+\s*\(", source))
+        classes = len(re.findall(r"\btype\s+\w+\s+struct\b", source))
+        imports = len(re.findall(r"^\s*import\s+", source, flags=re.MULTILINE))
+    elif language == "PHP":
+        funcs = len(re.findall(r"\bfunction\s+\w+\s*\(", source))
+        classes = len(re.findall(r"\bclass\s+\w+", source))
+        imports = len(re.findall(r"^\s*(?:use|require|include)\s+", source, flags=re.MULTILINE))
     else:
         funcs = classes = imports = 0
     return funcs, classes, imports

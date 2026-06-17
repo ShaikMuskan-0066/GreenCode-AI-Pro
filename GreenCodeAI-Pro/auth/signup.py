@@ -14,11 +14,15 @@ def render_signup_form() -> None:
     Render the Sign Up form with validation and auto-login on success.
     """
     with st.form("signup_form"):
+        st.markdown("#### Create your account")
         full_name = st.text_input("Full Name", placeholder="Muskan Sharma")
         username = st.text_input("Username", placeholder="muskan")
         email = st.text_input("Email", placeholder="muskan@gmail.com")
         password = st.text_input("Password", type="password", placeholder="Min. 8 characters")
         confirm = st.text_input("Confirm Password", type="password")
+        if password:
+            score = min(100, len(password) * 10)
+            st.progress(score / 100, text=f"Password strength: {score}%")
         submitted = st.form_submit_button("Create Account", type="primary", use_container_width=True)
 
     if submitted:

@@ -193,6 +193,43 @@ def _dedupe_issues(issues: list[AnalysisIssue]) -> list[AnalysisIssue]:
     return unique
 
 
+def _resource_heavy_detected(text: str) -> bool:
+    """
+    Heuristic detection of resource-heavy training patterns.
+
+    Flags high epoch counts, oversized models, or repeated backward passes.
+    """
+    for pattern in (
+        r"(?:num_epochs|max_epochs|epochs)\s*[=:]\s*(\d+)",
+        r"for\s+epoch\s+in\s+range\s*\(\s*(\d+)",
+    ):
+        for m in re.finditer(pattern, text, flags=re.IGNORECASE):
+            if int(m.group(1)) > 50:
+                return True
+    for pattern in (r"hidden_size\s*[=:]\s*(\d+)", r"n_embd\s*[=:]\s*(\d+)", r"d_model\s*[=:]\s*(\d+)"):
+        for m in re.finditer(pattern, text, flags=re.IGNORECASE):
+            if int(m.group(1)) >= 2048:
+                return True
+    if text.count(".backward()") >= 6:
+        return True
+    if len(re.findall(r"\.cuda\s*\(|\.to\s*\(\s*['\"]cuda", text, flags=re.IGNORECASE)) >= 8:
+        return True
+    return False
+
+
+def _append_resource_heavy_issue(issues: list[AnalysisIssue], text: str, language: str) -> None:
+    """Append RESOURCE_HEAVY issue when heuristics match."""
+    if _resource_heavy_detected(text):
+        issues.append(
+            AnalysisIssue(
+                code="RESOURCE_HEAVY",
+                title="Resource heavy patterns",
+                detail=f"High compute patterns detected in {language} source (epochs, model size, or GPU churn).",
+                severity="high",
+            )
+        )
+
+
 def _multilang_regex_signals(text: str, language: str) -> dict[str, Any]:
     """
     Regex heuristics for ML inefficiency patterns in non-Python languages.
@@ -303,6 +340,8 @@ def _analyze_multilang_text(text: str, logical_path: Path, language: str) -> Ana
             )
         )
 
+    _append_resource_heavy_issue(issues, text, language)
+
     return AnalysisResult(
         file_path=logical_path,
         issues=_dedupe_issues(issues),
@@ -379,9 +418,10 @@ def _analyze_text(text: str, logical_path: Path, language: str = "Python") -> An
                     code="LOADER_DEFAULT",
                     title="Inefficient DataLoader usage",
                     detail="Consider explicit num_workers and pin_memory.",
-                    severity="low",
-                )
+                severity="low",
             )
+        )
+        _append_resource_heavy_issue(issues, text, language)
         return AnalysisResult(
             file_path=logical_path, issues=_dedupe_issues(issues), raw_text=text, language=language
         )
@@ -471,6 +511,8 @@ def _analyze_text(text: str, logical_path: Path, language: str = "Python") -> An
                 severity="low",
             )
         )
+
+    _append_resource_heavy_issue(issues, text, language)
 
     return AnalysisResult(
         file_path=logical_path, issues=_dedupe_issues(issues), raw_text=text, language=language

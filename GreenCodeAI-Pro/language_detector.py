@@ -15,6 +15,11 @@ SUPPORTED_EXTENSIONS: dict[str, str] = {
     ".cc": "C++",
     ".cxx": "C++",
     ".hpp": "C++",
+    ".c": "C",
+    ".h": "C",
+    ".cs": "C#",
+    ".go": "Go",
+    ".php": "PHP",
 }
 
 SUPPORTED_LANGUAGES: frozenset[str] = frozenset(SUPPORTED_EXTENSIONS.values())
@@ -53,8 +58,16 @@ def detect_language_from_content(source: str) -> str | None:
         return "TypeScript"
     if "function " in sample or "const " in sample and "=>" in sample:
         return "JavaScript"
-    if "#include" in sample or "std::" in sample:
+    if "using System" in sample or "namespace " in sample and ";" in sample:
+        return "C#"
+    if "package main" in sample or "func " in sample and "fmt." in sample:
+        return "Go"
+    if "<?php" in sample or "$" in sample and "->" in sample:
+        return "PHP"
+    if "#include" in sample and "std::" in sample:
         return "C++"
+    if "#include" in sample:
+        return "C"
     return None
 
 
@@ -67,7 +80,7 @@ def detect_language(filename: str, source: str | None = None) -> str:
         source: Optional source text for content-based fallback.
 
     Returns:
-        One of: Python, Java, JavaScript, TypeScript, C++.
+        Detected language label (defaults to Python if unknown).
     """
     by_name = detect_language_from_filename(filename)
     if by_name:
@@ -95,6 +108,10 @@ def language_badge_html(language: str) -> str:
         "JavaScript": "#f1e05a",
         "TypeScript": "#3178c6",
         "C++": "#f34b7d",
+        "C": "#555555",
+        "C#": "#178600",
+        "Go": "#00ADD8",
+        "PHP": "#4F5D95",
     }
     fg = "#0e1117" if language in {"JavaScript"} else "#f0f2f6"
     bg = colors.get(language, "#00d4aa")

@@ -9,6 +9,7 @@ from pathlib import Path
 from analyzer import AnalysisResult
 from carbon_tracker import CarbonEstimate
 from code_metrics import CodeMetrics
+from metrics_insights import QualityInsights
 from sustainability_score import score_status_label
 
 
@@ -31,6 +32,7 @@ def generate_pdf_report(
     language: str,
     green_score: int,
     metrics: CodeMetrics | None = None,
+    quality: QualityInsights | None = None,
     output_path: Path | None = None,
 ) -> Path:
     """
@@ -43,6 +45,7 @@ def generate_pdf_report(
         language: Detected programming language.
         green_score: 0–100 sustainability score.
         metrics: Optional code metrics.
+        quality: Optional quality and complexity insights.
         output_path: Destination PDF path.
 
     Returns:
@@ -100,6 +103,9 @@ def generate_pdf_report(
         story.append(Paragraph("<b>Code metrics</b>", styles["Heading3"]))
         mrows = [
             ["Total lines", str(metrics.total_lines)],
+            ["Code lines", str(metrics.code_lines)],
+            ["Blank lines", str(metrics.blank_lines)],
+            ["Comment lines", str(metrics.comment_lines)],
             ["Functions", str(metrics.functions)],
             ["Classes", str(metrics.classes)],
             ["Imports", str(metrics.imports)],
@@ -107,6 +113,39 @@ def generate_pdf_report(
         mt = Table(mrows, colWidths=[8 * cm, 8 * cm])
         mt.setStyle(TableStyle([("GRID", (0, 0), (-1, -1), 0.5, colors.grey)]))
         story.append(mt)
+        story.append(Spacer(1, 0.3 * cm))
+
+    if quality is not None:
+        story.append(Paragraph("<b>Quality analysis</b>", styles["Heading3"]))
+        qrows = [
+            ["Cyclomatic complexity (est.)", f"{quality.cyclomatic_complexity} ({quality.complexity_label})"],
+            ["Maintainability", f"{quality.maintainability_score}/100 ({quality.maintainability_label})"],
+            ["Readability", f"{quality.readability_score}/100 ({quality.readability_label})"],
+            ["Code quality", f"{quality.code_quality_score}/100 ({quality.code_quality_label})"],
+        ]
+        qt = Table(qrows, colWidths=[8 * cm, 8 * cm])
+        qt.setStyle(TableStyle([("GRID", (0, 0), (-1, -1), 0.5, colors.grey)]))
+        story.append(qt)
+        story.append(Spacer(1, 0.3 * cm))
+
+    # Add sustainability summary if available on analysis or via supplied args
+    sus_score = getattr(analysis, "sustainability_score", None)
+    sus_grade = getattr(analysis, "sustainability_grade", None)
+    resource_eff = getattr(analysis, "resource_efficiency", None)
+    suggestions_count = len(suggestions) if suggestions is not None else 0
+    if sus_score is not None or sus_grade is not None or resource_eff is not None:
+        story.append(Paragraph("<b>Sustainability Summary</b>", styles["Heading3"]))
+        srows = []
+        if sus_score is not None:
+            srows.append(["Sustainability Score", f"{sus_score}/100"])
+        if sus_grade is not None:
+            srows.append(["Sustainability Grade", sus_grade])
+        if resource_eff is not None:
+            srows.append(["Resource Efficiency", f"{resource_eff}/100"])
+        srows.append(["Optimization Opportunities", str(suggestions_count)])
+        stbl = Table(srows, colWidths=[8 * cm, 8 * cm])
+        stbl.setStyle(TableStyle([("GRID", (0, 0), (-1, -1), 0.5, colors.grey)]))
+        story.append(stbl)
         story.append(Spacer(1, 0.3 * cm))
 
     story.append(Paragraph("<b>Detected issues</b>", styles["Heading3"]))

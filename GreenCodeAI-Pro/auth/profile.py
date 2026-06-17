@@ -10,6 +10,21 @@ from auth.auth_utils import find_user_by_id, get_admin_stats, is_admin, update_u
 from utils import get_user_account_stats
 
 
+def _profile_kpi(icon: str, title: str, value: str, subtitle: str = "") -> None:
+    """Render a profile statistics KPI card."""
+    st.markdown(
+        f"""
+        <div class="gc-kpi-card gc-fade-in">
+          <div class="gc-kpi-icon">{icon}</div>
+          <div class="gc-kpi-title">{title}</div>
+          <div class="gc-kpi-value">{value}</div>
+          <div class="gc-kpi-subtitle">{subtitle}</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
 def render_profile_page() -> None:
     """
     Show profile details, edit forms, account stats, and optional admin panel.
@@ -24,30 +39,92 @@ def render_profile_page() -> None:
         st.error("User record not found.")
         return
 
-    st.subheader("User profile")
-    st.markdown(f"### Welcome, **{user.get('username')}**")
+    username = user.get("username", "user")
+    initial = (username[0] if username else "U").upper()
+    display_name = user.get("name") or username
 
+    st.markdown(
+        f"""
+        <div class="gc-profile-hero gc-fade-in">
+          <div style="display:flex;gap:0.9rem;align-items:center;">
+            <div class="gc-avatar" style="width:52px;height:52px;font-size:1.3rem;">{initial}</div>
+            <div>
+              <h2>Welcome, {display_name}</h2>
+              <p>@{username} · {user.get("role", "user")}</p>
+            </div>
+          </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    st.markdown('<div class="gc-section-title">Account Information</div>', unsafe_allow_html=True)
     c1, c2 = st.columns(2)
     with c1:
-        st.metric("Full name", user.get("name", "—"))
-        st.metric("Username", user.get("username", "—"))
+        st.markdown(
+            f"""
+            <div class="gc-glass-panel gc-fade-in">
+              <div class="gc-kpi-title">Full Name</div>
+              <div class="gc-kpi-value" style="font-size:1.2rem;">{user.get("name", "—")}</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+        st.markdown(
+            f"""
+            <div class="gc-glass-panel gc-fade-in">
+              <div class="gc-kpi-title">Username</div>
+              <div class="gc-kpi-value" style="font-size:1.2rem;">{user.get("username", "—")}</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
     with c2:
-        st.metric("Email", user.get("email", "—"))
-        st.metric("Registration", user.get("registration_date", "—"))
-    st.metric("Last login", user.get("last_login") or "Never")
+        st.markdown(
+            f"""
+            <div class="gc-glass-panel gc-fade-in">
+              <div class="gc-kpi-title">Email</div>
+              <div class="gc-kpi-value" style="font-size:1.2rem;">{user.get("email", "—")}</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+        st.markdown(
+            f"""
+            <div class="gc-glass-panel gc-fade-in">
+              <div class="gc-kpi-title">Registration</div>
+              <div class="gc-kpi-value" style="font-size:1.2rem;">{user.get("registration_date", "—")}</div>
+              <div class="gc-kpi-subtitle">Last login: {user.get("last_login") or "Never"}</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
 
-    st.divider()
-    st.subheader("Account statistics")
+    st.markdown('<div class="gc-section-title">Your Sustainability Metrics</div>', unsafe_allow_html=True)
     stats = get_user_account_stats(str(user_id))
     s1, s2, s3, s4 = st.columns(4)
-    s1.metric("Analyses completed", stats["analyses_completed"])
-    s2.metric("Average green score", f"{stats['average_score']:.1f}")
-    s3.metric("Highest score", stats["highest_score"])
-    s4.metric("Total carbon tracked (kg)", f"{stats['total_carbon_tracked']:.2f}")
-    st.caption(f"Estimated carbon savings vs baseline: **{stats['total_carbon_saved']:.2f} kg**")
+    with s1:
+        _profile_kpi("📊", "Total Analyses", str(stats["analyses_completed"]), "Completed scans")
+    with s2:
+        _profile_kpi("🌿", "Average Green Score", f"{stats['average_score']:.1f}", "Across all analyses")
+    with s3:
+        _profile_kpi("♻️", "Carbon Saved", f"{stats['total_carbon_saved']:.2f} kg", "Estimated vs baseline")
+    with s4:
+        _profile_kpi("📄", "Reports Generated", str(stats["analyses_completed"]), "TXT and PDF exports")
 
-    st.divider()
-    st.subheader("Edit profile")
+    st.markdown('<div class="gc-section-title">Recent Activity</div>', unsafe_allow_html=True)
+    st.markdown(
+        f"""
+        <div class="gc-glass-panel gc-fade-in">
+          <div class="gc-kpi-title">Highest Green Score</div>
+          <div class="gc-kpi-value">{stats["highest_score"]}</div>
+          <div class="gc-kpi-subtitle">Total carbon tracked: {stats["total_carbon_tracked"]:.2f} kg</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    st.markdown('<div class="gc-section-title">Edit Profile</div>', unsafe_allow_html=True)
 
     with st.form("edit_name_form"):
         new_name = st.text_input("Change full name", value=user.get("name", ""))
@@ -83,13 +160,25 @@ def _render_admin_dashboard() -> None:
     """
     Admin-only cards: all users, analyses, reports, active users.
     """
-    st.subheader("Admin dashboard")
+    st.markdown(
+        """
+        <div class="gc-page-header gc-fade-in">
+          <h2>Admin Dashboard</h2>
+          <p>Platform-wide usage and user activity overview.</p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
     stats = get_admin_stats()
     a1, a2, a3, a4 = st.columns(4)
-    a1.metric("Total users", stats["total_users"])
-    a2.metric("Total analyses", stats["total_analyses"])
-    a3.metric("Reports generated", stats["total_reports"])
-    a4.metric("Active users (7d)", stats["active_users_7d"])
+    with a1:
+        _profile_kpi("👥", "Total Users", str(stats["total_users"]))
+    with a2:
+        _profile_kpi("📊", "Total Analyses", str(stats["total_analyses"]))
+    with a3:
+        _profile_kpi("📄", "Reports Generated", str(stats["total_reports"]))
+    with a4:
+        _profile_kpi("⚡", "Active Users (7d)", str(stats["active_users_7d"]))
 
     users_df_data = [
         {
